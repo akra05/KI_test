@@ -4,7 +4,8 @@ from PIL import Image
 import os  
 import math
 
-class_matrix = [[rd.uniform(-0.5, 0.5) for _ in range(784)] for _ in range(10)]
+class_matrix = [[rd.uniform(-0.1, 0.1) for _ in range(784)] for _ in range(10)]
+learn_rate = 0.01
 
 def convert_to_array(matrix):
     arr = []
@@ -27,7 +28,7 @@ def get_list(length):
 
 def load_model(list,progress):
     #path to the folder where the dataset is stored 
-    folder = r"D:\Projekte\Zahlenerkennung\mnist_images"
+    folder = r"E:\Eigene Projekte\Zahlerkennung\daten\mnist_png\mnist_png\training"
 
     #loop which loads an image from the given folder for each number in the list 
     #calculates the linear model for each image and the corresponding label
@@ -75,44 +76,51 @@ def calculate_linear_model(array, label):
     
     #normalize the result array with softmax function
     result_arr = calc_softmax(result_arr)
-    print(result_arr)
+    
     
     #check if probabilities add up to 1
     sum = 0
     for i in result_arr:
         sum += i
-    print(sum)
+    
     print(return_val)
     print(label)
 
     label_vector = [0]*10
     label_vector[label] = 1
 
+    for i in range(10):
+        loss_for_class = result_arr[i] - label_vector[i]
+
+        for j in range(784):
+            class_matrix[i][j] -= learn_rate * (loss_for_class * array[j])
+            
+
+    #calculate loss
     loss = 0
     for i in range(10):
         loss += (result_arr[i] - label_vector[i])**2
-
+    
+    loss /= 10
+    
     print("Loss: " + str(loss))
 
 # function to calculate softmax
 def calc_softmax(arr):
-    e = math.e #get the euler's number
-    sum = 0 
-    return_arr = [0]*10
-    #calculate divisor
-    for i in arr:
-        sum += e**i
-    #calculate result array with values between 0 and 1
-    for i in arr:
-        return_arr[arr.index(i)] = (e**i)/sum
-
+    exp_vals = [math.exp(x) for x in arr]
+    total = sum(exp_vals)
+    return_arr = [0]*len(arr)
+    for idx, val in enumerate(exp_vals):
+        return_arr[idx] = val / total
     return return_arr
 
+
 def main():
-    length = 1
+    length = 50000
     progress = [0]*10
     list = get_list(length)
     load_model(list,progress)
+    np.save(r"E:\Eigene Projekte\Zahlerkennung\class_matrix.npy", np.array(class_matrix))
     
 
 
